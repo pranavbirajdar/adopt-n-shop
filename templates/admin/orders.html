@@ -1,0 +1,111 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Manage Orders – Adopt n Shop Admin{% endblock %}
+{% block page_title %}Store Orders & Fulfillment{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-1">Customer Orders ({{ orders|length }})</h4>
+    <p class="text-muted small mb-0">Track order fulfillment, update delivery status, and review customer invoices.</p>
+  </div>
+</div>
+
+<!-- Search & Status Filter -->
+<div class="admin-card p-3 mb-4">
+  <form action="{{ url_for('admin_orders') }}" method="GET" class="row g-2 align-items-center">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" name="q" value="{{ search }}" class="form-control border-start-0" placeholder="Search by order # or customer name...">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <select name="status" class="form-select">
+        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Order Statuses</option>
+        {% for st in statuses %}
+          <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+      <a href="{{ url_for('admin_orders') }}" class="btn btn-light border" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+    </div>
+  </form>
+</div>
+
+<!-- Orders Table -->
+<div class="admin-card">
+  <div class="table-responsive">
+    <table class="table admin-table align-middle">
+      <thead>
+        <tr>
+          <th>Order Number</th>
+          <th>Date Placed</th>
+          <th>Customer Name</th>
+          <th>Items</th>
+          <th>Total Amount</th>
+          <th>Payment</th>
+          <th>Fulfillment Status</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          <tr>
+            <td>
+              <strong class="text-dark">{{ order.order_number }}</strong>
+            </td>
+            <td>
+              <small class="text-muted">{{ order.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+            </td>
+            <td>
+              <strong>{{ order.shipping_name }}</strong><br>
+              <small class="text-muted">{{ order.shipping_phone }}</small>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ order.total_items_count }} items</span>
+            </td>
+            <td class="fw-bold text-dark">
+              ${{ "%.2f"|format(order.total_amount) }}
+            </td>
+            <td>
+              <small class="d-block">{{ order.payment_method }}</small>
+              {% if order.payment_status == 'Paid' %}
+                <span class="badge bg-success-subtle text-success">Paid</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning">Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if order.status == 'Delivered' %}
+                <span class="badge bg-success">Delivered</span>
+              {% elif order.status == 'Shipped' %}
+                <span class="badge bg-primary">Shipped</span>
+              {% elif order.status == 'Processing' %}
+                <span class="badge bg-info text-dark">Processing</span>
+              {% elif order.status == 'Cancelled' %}
+                <span class="badge bg-danger">Cancelled</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('admin_order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-sliders me-1"></i> Manage
+              </a>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-4 text-muted">
+              No orders found matching the filter.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

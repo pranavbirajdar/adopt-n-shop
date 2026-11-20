@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="p-4 p-md-5 bg-white">
+          <div class="text-center mb-4">
+            <span class="d-inline-flex p-3 rounded-circle text-white mb-2" style="background: linear-gradient(135deg, var(--secondary), var(--primary));">
+              <i class="bi bi-person-plus-fill fs-3"></i>
+            </span>
+            <h3 class="fw-bold mb-1">Create an Account</h3>
+            <p class="text-muted small">Join our community to adopt pets and shop quality pet products</p>
+          </div>
+
+          <form action="{{ url_for('register') }}" method="POST">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-person"></i></span>
+                  <input type="text" name="name" value="{{ name or '' }}" class="form-control border-start-0" placeholder="e.g. Alex Morgan" required>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope"></i></span>
+                  <input type="email" name="email" value="{{ email or '' }}" class="form-control border-start-0" placeholder="alex@example.com" required>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+                  <input type="password" name="password" class="form-control border-start-0" placeholder="Min 6 characters" minlength="6" required>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock-fill"></i></span>
+                  <input type="password" name="confirm_password" class="form-control border-start-0" placeholder="Re-type password" minlength="6" required>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Phone Number</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone"></i></span>
+                  <input type="tel" name="phone" value="{{ phone or '' }}" class="form-control border-start-0" placeholder="+1 (555) 000-0000">
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Residential Address</label>
+                <textarea name="address" class="form-control" rows="2" placeholder="Street address, City, State, Postal code">{{ address or '' }}</textarea>
+                <small class="text-muted">Used for pet adoption home verification and product delivery.</small>
+              </div>
+
+              <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                  <i class="bi bi-check2-circle me-1"></i> Register Account
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div class="text-center mt-4">
+            <p class="small text-muted mb-0">
+              Already registered? <a href="{{ url_for('login') }}" class="fw-bold">Log in here</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

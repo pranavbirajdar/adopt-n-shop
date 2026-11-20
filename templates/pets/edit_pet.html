@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Pet Listing: {{ pet.name }} – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('my_listed_pets') }}">My Listings</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Edit {{ pet.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="mb-4 pb-2 border-bottom">
+          <span class="section-tag" style="background-color: var(--secondary-light); color: var(--secondary-dark);">
+            Pet Parent Portal
+          </span>
+          <h2 class="fw-bold mb-1">Edit Pet Listing: {{ pet.name }}</h2>
+          <p class="text-muted small mb-0">
+            Keep your pet's information accurate. Note: Saving changes will resubmit the listing for admin review.
+          </p>
+        </div>
+
+        {% if pet.is_rejected and pet.approval_notes %}
+          <div class="alert alert-danger mb-4 rounded-3" role="alert">
+            <h6 class="fw-bold mb-1"><i class="bi bi-exclamation-octagon-fill me-1"></i> Admin Rejection Feedback:</h6>
+            <p class="mb-0 small">{{ pet.approval_notes }}</p>
+          </div>
+        {% endif %}
+
+        <form action="{{ url_for('edit_listed_pet', pet_id=pet.id) }}" method="POST" enctype="multipart/form-data">
+          <div class="row g-3">
+            <!-- Pet Name -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Pet's Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" value="{{ pet.name }}" class="form-control" required>
+            </div>
+
+            <!-- Species -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Species <span class="text-danger">*</span></label>
+              <select name="species" class="form-select" required>
+                <option value="Dog" {% if pet.species == 'Dog' %}selected{% endif %}>Dog</option>
+                <option value="Cat" {% if pet.species == 'Cat' %}selected{% endif %}>Cat</option>
+                <option value="Bird" {% if pet.species == 'Bird' %}selected{% endif %}>Bird</option>
+                <option value="Rabbit" {% if pet.species == 'Rabbit' %}selected{% endif %}>Rabbit</option>
+                <option value="Other" {% if pet.species == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+
+            <!-- Breed -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Breed <span class="text-danger">*</span></label>
+              <input type="text" name="breed" value="{{ pet.breed }}" class="form-control" required>
+            </div>
+
+            <!-- Age in Years -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Age (Years)</label>
+              <input type="number" name="age_years" value="{{ pet.age_years }}" min="0" max="30" class="form-control">
+            </div>
+
+            <!-- Age in Months -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Age (Months)</label>
+              <input type="number" name="age_months" value="{{ pet.age_months }}" min="0" max="11" class="form-control">
+            </div>
+
+            <!-- Gender -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
+              <select name="gender" class="form-select" required>
+                <option value="Male" {% if pet.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if pet.gender == 'Female' %}selected{% endif %}>Female</option>
+              </select>
+            </div>
+
+            <!-- Size -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Size</label>
+              <select name="size" class="form-select">
+                <option value="Small" {% if pet.size == 'Small' %}selected{% endif %}>Small</option>
+                <option value="Medium" {% if pet.size == 'Medium' %}selected{% endif %}>Medium</option>
+                <option value="Large" {% if pet.size == 'Large' %}selected{% endif %}>Large</option>
+              </select>
+            </div>
+
+            <!-- City in India -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">City <span class="text-danger">*</span></label>
+              <select name="city" class="form-select" required>
+                {% for c in cities %}
+                  <option value="{{ c }}" {% if pet.city == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- State in India -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">State <span class="text-danger">*</span></label>
+              <select name="state" class="form-select" required>
+                {% for s in states %}
+                  <option value="{{ s }}" {% if pet.state == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contact Phone Number <span class="text-danger">*</span></label>
+              <input type="tel" name="contact_phone" value="{{ pet.contact_phone or current_user.phone or '' }}" class="form-control" placeholder="+91 98765 43210" required>
+              <small class="text-muted">Interested adopters can contact you at this number.</small>
+            </div>
+
+            <!-- Optional Rehoming Fee in INR -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Optional Rehoming Fee (₹ INR)</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" step="50" name="rehoming_fee" value="{{ pet.rehoming_fee|int if pet.rehoming_fee else 0 }}" min="0" class="form-control" placeholder="0 for Free Adoption">
+              </div>
+              <small class="text-muted">Enter 0 for Free Adoption. Fee must strictly cover genuine medical/care expenses.</small>
+            </div>
+
+            <!-- Health Status -->
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">Health & Veterinary Status</label>
+              <input type="text" name="health_status" value="{{ pet.health_status }}" class="form-control" placeholder="e.g. Vaccinated, Dewormed, Neutered, Healthy">
+            </div>
+
+            <!-- Vaccinated -->
+            <div class="col-md-4 d-flex align-items-center">
+              <div class="form-check mt-md-4">
+                <input class="form-check-input" type="checkbox" name="vaccinated" id="vaccinated" {% if pet.vaccinated %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="vaccinated">
+                  Up-to-date on Vaccinations
+                </label>
+              </div>
+            </div>
+
+            <!-- Primary Photo Upload -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Update Primary Photo</label>
+              <input type="file" name="image" class="form-control image-upload-input" data-preview-target="petPreview" accept="image/*">
+              <small class="text-muted">Leave empty to keep existing photo.</small>
+            </div>
+
+            <!-- Additional Photos Upload -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Add More Photos (Multi-Select)</label>
+              <input type="file" name="additional_images" class="form-control" accept="image/*" multiple>
+              <small class="text-muted">Select multiple pictures from different angles.</small>
+            </div>
+
+            <!-- Preview -->
+            <div class="col-12">
+              <label class="form-label small text-muted d-block">Current Photo:</label>
+              <div class="d-flex flex-wrap gap-2">
+                <img id="petPreview" src="{{ pet.image_url }}" alt="{{ pet.name }}" class="rounded-3 border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label fw-semibold">Pet's Personality, Habits & Story <span class="text-danger">*</span></label>
+              <textarea name="description" rows="4" class="form-control" required>{{ pet.description }}</textarea>
+            </div>
+
+            <!-- Submit -->
+            <div class="col-12 mt-4 pt-2 border-top d-flex justify-content-between align-items-center">
+              <a href="{{ url_for('my_listed_pets') }}" class="btn btn-light border">Cancel</a>
+              <button type="submit" class="btn btn-secondary-custom px-4 py-2 fw-bold">
+                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Update & Resubmit for Review
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

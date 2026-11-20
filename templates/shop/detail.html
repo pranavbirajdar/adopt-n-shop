@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} – Pet Shop | Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('shop_list') }}">Pet Shop</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('shop_list', category=product.category) }}">{{ product.category }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5">
+    <!-- Left Column: Product Image -->
+    <div class="col-lg-6">
+      <div class="detail-img-box mb-4 position-relative p-2 bg-white border">
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="rounded-3" onerror="this.src='/static/images/default_product.svg'">
+        <div class="position-absolute top-0 start-0 m-3">
+          <span class="badge bg-secondary-custom fs-6">{{ product.category }}</span>
+        </div>
+      </div>
+
+      <!-- Guarantee Badges -->
+      <div class="row g-3">
+        <div class="col-4">
+          <div class="p-3 bg-white border rounded-3 text-center h-100 shadow-sm">
+            <i class="bi bi-truck fs-3 text-teal" style="color: var(--primary);"></i>
+            <h6 class="fw-bold mt-2 mb-1 small">Fast Delivery</h6>
+            <small class="text-muted" style="font-size: 0.75rem;">Dispatched in 24h</small>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-3 bg-white border rounded-3 text-center h-100 shadow-sm">
+            <i class="bi bi-shield-check fs-3 text-teal" style="color: var(--primary);"></i>
+            <h6 class="fw-bold mt-2 mb-1 small">100% Authentic</h6>
+            <small class="text-muted" style="font-size: 0.75rem;">Vet-approved brands</small>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-3 bg-white border rounded-3 text-center h-100 shadow-sm">
+            <i class="bi bi-arrow-repeat fs-3 text-teal" style="color: var(--primary);"></i>
+            <h6 class="fw-bold mt-2 mb-1 small">Easy Returns</h6>
+            <small class="text-muted" style="font-size: 0.75rem;">30-day money back</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Product Info & Purchase Action -->
+    <div class="col-lg-6">
+      <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm h-100 d-flex flex-column">
+        <div class="mb-2">
+          <span class="badge-category mb-2">{{ product.category }}</span>
+          <h1 class="h2 fw-bold text-dark mb-2">{{ product.name }}</h1>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 my-3">
+          <span class="display-6 fw-bold text-dark">₹{{ "%.2f"|format(product.price) }}</span>
+          {% if product.stock > 0 %}
+            <span class="badge bg-success-subtle text-success fs-6 border border-success-subtle px-3 py-2">
+              <i class="bi bi-check2-circle me-1"></i> In Stock ({{ product.stock }} units)
+            </span>
+          {% else %}
+            <span class="badge bg-danger-subtle text-danger fs-6 border border-danger-subtle px-3 py-2">
+              <i class="bi bi-x-circle me-1"></i> Out of Stock
+            </span>
+          {% endif %}
+        </div>
+
+        <hr class="my-3">
+
+        <!-- Product Description -->
+        <h5 class="fw-bold text-dark mb-2">Product Description</h5>
+        <p class="text-secondary mb-4" style="line-height: 1.7;">
+          {{ product.description }}
+        </p>
+
+        <!-- Purchase & Cart Controls -->
+        <div class="mt-auto pt-3 border-top">
+          {% if current_user.is_authenticated and current_user.is_admin %}
+            <div class="alert alert-secondary mb-0">
+              <i class="bi bi-shield-lock me-1"></i> You are logged in as <strong>Administrator</strong>. You can update this product's price, stock, and info via <a href="{{ url_for('admin_product_edit', product_id=product.id) }}" class="alert-link">Admin Product Management</a>.
+            </div>
+          {% elif product.stock > 0 %}
+            {% if current_user.is_authenticated %}
+              <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                <div class="row g-3 align-items-center mb-3">
+                  <div class="col-sm-4">
+                    <label class="form-label small fw-bold text-muted mb-1">Quantity</label>
+                    <div class="input-group qty-control-group">
+                      <button type="button" class="btn btn-outline-secondary btn-qty-minus"><i class="bi bi-dash"></i></button>
+                      <input type="number" name="quantity" class="form-control text-center qty-input" value="1" min="1" max="{{ product.stock }}">
+                      <button type="button" class="btn btn-outline-secondary btn-qty-plus"><i class="bi bi-plus"></i></button>
+                    </div>
+                  </div>
+                  <div class="col-sm-8 d-flex align-items-end">
+                    <button type="submit" class="btn btn-secondary-custom btn-lg w-100 py-2">
+                      <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </form>
+            {% else %}
+              <div class="p-3 bg-light rounded-3 border text-center">
+                <p class="mb-2 fw-semibold">Please log in to add items to your shopping cart</p>
+                <a href="{{ url_for('login', next=request.url) }}" class="btn btn-primary px-4">
+                  <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Buy
+                </a>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="alert alert-danger mb-0">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> This product is currently out of stock. Please check back later.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  {% if related_products %}
+    <div class="mt-5 pt-4 border-top">
+      <h3 class="fw-bold mb-4">Related in {{ product.category }}</h3>
+      <div class="row g-4">
+        {% for rel in related_products %}
+          <div class="col-lg-3 col-md-6">
+            <div class="custom-card">
+              <div class="card-img-container" style="height: 180px;">
+                <img src="{{ rel.image_url }}" alt="{{ rel.name }}" onerror="this.src='/static/images/default_product.svg'">
+              </div>
+              <div class="p-3">
+                <h6 class="fw-bold mb-1 text-truncate">{{ rel.name }}</h6>
+                <div class="d-flex justify-content-between align-items-baseline mb-2">
+                  <span class="fw-bold text-dark">${{ "%.2f"|format(rel.price) }}</span>
+                  <span class="badge bg-light text-muted border small">{{ rel.category }}</span>
+                </div>
+                <a href="{{ url_for('product_detail', product_id=rel.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                  View Product
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

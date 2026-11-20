@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-4">
+    <!-- Profile Sidebar / Summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 text-center p-4 bg-white mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center text-white rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--secondary)); font-size: 2rem; font-weight: 700;">
+          {{ current_user.name[:1].upper() }}
+        </div>
+        <h4 class="fw-bold mb-1">{{ current_user.name }}</h4>
+        <p class="text-muted small mb-3">{{ current_user.email }}</p>
+        <div>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
+            <i class="bi bi-shield-check me-1"></i> {{ current_user.role.capitalize() }} Account
+          </span>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex justify-content-around text-center">
+          <div>
+            <h5 class="fw-bold mb-0 text-teal" style="color: var(--primary);">{{ current_user.orders|length }}</h5>
+            <small class="text-muted">Total Orders</small>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0 text-secondary" style="color: var(--secondary);">{{ current_user.adoption_requests|length }}</h5>
+            <small class="text-muted">Adoption Apps</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-group shadow-sm border-0 rounded-4 overflow-hidden">
+        <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action active border-0 py-3 d-flex align-items-center gap-2" style="background-color: var(--primary);">
+          <i class="bi bi-person-circle fs-5"></i> Edit Profile Information
+        </a>
+        <a href="{{ url_for('my_adoptions') }}" class="list-group-item list-group-item-action border-0 py-3 d-flex align-items-center gap-2">
+          <i class="bi bi-balloon-heart fs-5 text-teal" style="color: var(--primary);"></i> My Adoption Applications
+        </a>
+        <a href="{{ url_for('my_orders') }}" class="list-group-item list-group-item-action border-0 py-3 d-flex align-items-center gap-2">
+          <i class="bi bi-receipt fs-5 text-secondary" style="color: var(--secondary);"></i> My Order History
+        </a>
+      </div>
+    </div>
+
+    <!-- Edit Profile Form -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <h4 class="fw-bold mb-4">Account Information & Security</h4>
+        <form action="{{ url_for('profile') }}" method="POST">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Full Name</label>
+              <input type="text" name="name" value="{{ current_user.name }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email Address (Immutable)</label>
+              <input type="email" value="{{ current_user.email }}" class="form-control bg-light" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contact Phone</label>
+              <input type="tel" name="phone" value="{{ current_user.phone or '' }}" class="form-control" placeholder="+1 (555) 000-0000">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Default Shipping / Verification Address</label>
+              <textarea name="address" class="form-control" rows="2">{{ current_user.address or '' }}</textarea>
+            </div>
+
+            <div class="col-12">
+              <hr class="my-3">
+              <h5 class="fw-bold mb-3"><i class="bi bi-key me-1"></i> Change Password (Optional)</h5>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Current Password</label>
+              <input type="password" name="current_password" class="form-control" placeholder="••••••••">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">New Password</label>
+              <input type="password" name="new_password" class="form-control" placeholder="Minimum 6 characters">
+            </div>
+
+            <div class="col-12 mt-4">
+              <button type="submit" class="btn btn-primary px-4 py-2">
+                <i class="bi bi-save me-1"></i> Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

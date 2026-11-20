@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('shop_list') }}">Pet Shop</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('view_cart') }}">Cart</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+    </ol>
+  </nav>
+
+  <div class="mb-4">
+    <span class="section-tag">Final Step</span>
+    <h1 class="fw-bold mb-1">Order Checkout</h1>
+    <p class="text-muted mb-0">Confirm delivery details and choose your preferred simulated payment method.</p>
+  </div>
+
+  <form action="{{ url_for('checkout') }}" method="POST">
+    <div class="row g-4">
+      <!-- Shipping & Payment Details -->
+      <div class="col-lg-8">
+        <!-- 1. Shipping Address -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+          <h4 class="fw-bold text-dark border-bottom pb-2 mb-3">
+            <i class="bi bi-geo-alt-fill text-teal me-2" style="color: var(--primary);"></i> 1. Delivery & Contact Details
+          </h4>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Recipient Full Name <span class="text-danger">*</span></label>
+              <input type="text" name="shipping_name" value="{{ current_user.name }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contact Phone <span class="text-danger">*</span></label>
+              <input type="tel" name="shipping_phone" value="{{ current_user.phone or '' }}" class="form-control" placeholder="+1 (555) 000-0000" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Delivery Address <span class="text-danger">*</span></label>
+              <textarea name="shipping_address" rows="2" class="form-control" placeholder="House/Flat No., Apartment name, Street address" required>{{ current_user.address or '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">City</label>
+              <input type="text" name="shipping_city" value="Springfield" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Postal / ZIP Code</label>
+              <input type="text" name="shipping_pincode" value="62701" class="form-control" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Payment Method Simulation -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h4 class="fw-bold text-dark mb-0">
+              <i class="bi bi-credit-card-fill text-secondary me-2" style="color: var(--secondary);"></i> 2. Payment Method
+            </h4>
+            <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+              <i class="bi bi-info-circle me-1"></i> Academic Simulation
+            </span>
+          </div>
+
+          <p class="text-muted small mb-3">
+            No real charges will occur. Choose a payment mode below to simulate order completion:
+          </p>
+
+          <!-- Payment Option Radios -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="p-3 border rounded-3 text-center h-100 position-relative">
+                <input class="form-check-input position-absolute top-0 end-0 m-2" type="radio" name="payment_method" id="pay_card" value="Credit/Debit Card" checked>
+                <label class="form-check-label w-100 cursor-pointer" for="pay_card">
+                  <i class="bi bi-credit-card fs-2 text-primary d-block mb-1"></i>
+                  <strong>Credit / Debit Card</strong>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">Visa, MC, Amex</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="p-3 border rounded-3 text-center h-100 position-relative">
+                <input class="form-check-input position-absolute top-0 end-0 m-2" type="radio" name="payment_method" id="pay_upi" value="UPI / QR">
+                <label class="form-check-label w-100 cursor-pointer" for="pay_upi">
+                  <i class="bi bi-qr-code-scan fs-2 text-teal d-block mb-1" style="color: var(--primary);"></i>
+                  <strong>UPI / QR Pay</strong>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">GPay, PhonePe, Paytm</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="p-3 border rounded-3 text-center h-100 position-relative">
+                <input class="form-check-input position-absolute top-0 end-0 m-2" type="radio" name="payment_method" id="pay_cod" value="Cash on Delivery">
+                <label class="form-check-label w-100 cursor-pointer" for="pay_cod">
+                  <i class="bi bi-cash-stack fs-2 text-success d-block mb-1"></i>
+                  <strong>Cash on Delivery</strong>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">Pay upon arrival</small>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Payment Details Containers -->
+          <div id="card-payment-details" class="p-3 bg-light rounded-3 border mb-3">
+            <h6 class="fw-bold mb-3"><i class="bi bi-credit-card me-1"></i> Simulated Card Information</h6>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Card Number</label>
+                <input type="text" id="card_number" class="form-control" placeholder="4532 •••• •••• 8890" maxlength="19" value="4532 8821 9012 3456">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Expiration Date</label>
+                <input type="text" id="card_expiry" class="form-control" placeholder="MM/YY" maxlength="5" value="12/28">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">CVV / CVC</label>
+                <input type="password" class="form-control" placeholder="•••" maxlength="4" value="789">
+              </div>
+            </div>
+          </div>
+
+          <div id="upi-payment-details" class="p-3 bg-light rounded-3 border mb-3 d-none">
+            <h6 class="fw-bold mb-3"><i class="bi bi-qr-code me-1"></i> Instant UPI / QR Simulation</h6>
+            <div class="row g-3 align-items-center">
+              <div class="col-md-8">
+                <label class="form-label small fw-semibold">Enter UPI Virtual Payment Address (VPA)</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-at"></i></span>
+                  <input type="text" class="form-control" placeholder="username@okhdfcbank" value="user@okaxis">
+                </div>
+                <small class="text-muted mt-1 d-block">Approve payment prompt on your UPI mobile app upon submitting.</small>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="p-2 bg-white rounded border d-inline-block">
+                  <i class="bi bi-qr-code fs-1 text-dark"></i>
+                  <small class="d-block text-muted" style="font-size: 0.65rem;">Scan & Pay Mock</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="cod-payment-details" class="p-3 bg-light rounded-3 border mb-3 d-none">
+            <div class="d-flex align-items-center gap-3">
+              <i class="bi bi-cash-coin fs-1 text-success"></i>
+              <div>
+                <h6 class="fw-bold mb-1">Pay Cash on Delivery</h6>
+                <small class="text-muted">You will pay ${{ "%.2f"|format(grand_total) }} in cash to the courier representative when your parcel is delivered.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Order Review Sidebar -->
+      <div class="col-lg-4">
+        <div class="cart-summary-card position-sticky" style="top: 90px;">
+          <h4 class="fw-bold mb-3">Order Items ({{ cart_items|length }})</h4>
+          
+          <div class="overflow-auto pe-1 mb-3" style="max-height: 240px;">
+            {% for item in cart_items %}
+              <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                  <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;" onerror="this.src='/static/images/default_product.svg'">
+                  <div>
+                    <h6 class="small fw-bold mb-0 text-truncate" style="max-width: 150px;">{{ item.product.name }}</h6>
+                    <small class="text-muted">Qty: {{ item.quantity }} × ${{ "%.2f"|format(item.product.price) }}</small>
+                  </div>
+                </div>
+                <span class="fw-semibold small">${{ "%.2f"|format(item.subtotal) }}</span>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Subtotal</span>
+            <span>${{ "%.2f"|format(subtotal) }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Delivery Charge</span>
+            <span>{% if shipping_fee == 0.0 %}<strong class="text-success">FREE</strong>{% else %}${{ "%.2f"|format(shipping_fee) }}{% endif %}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-3 small">
+            <span class="text-muted">Tax (5%)</span>
+            <span>${{ "%.2f"|format(tax_amount) }}</span>
+          </div>
+
+          <hr class="my-2">
+
+          <div class="d-flex justify-content-between align-items-baseline mb-4">
+            <span class="h5 fw-bold mb-0">Total Due</span>
+            <span class="fs-3 fw-bold text-dark">${{ "%.2f"|format(grand_total) }}</span>
+          </div>
+
+          <button type="submit" class="btn btn-secondary-custom btn-lg w-100 py-3 fw-bold">
+            <i class="bi bi-bag-check-fill me-1"></i> Place Order Now
+          </button>
+
+          <div class="text-center mt-3 text-muted" style="font-size: 0.78rem;">
+            <i class="bi bi-lock-fill me-1"></i> Safe 256-Bit SSL Encrypted Checkout
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

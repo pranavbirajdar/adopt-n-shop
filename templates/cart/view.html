@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4">
+    <span class="section-tag">Checkout Process</span>
+    <h1 class="fw-bold mb-1">Your Shopping Cart</h1>
+    <p class="text-muted mb-0">Review items in your cart and adjust quantities before payment.</p>
+  </div>
+
+  {% if cart_items %}
+    <div class="row g-4">
+      <!-- Cart Items Table -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-3">
+          <div class="table-responsive">
+            <table class="table align-middle cart-table mb-0">
+              <thead>
+                <tr>
+                  <th scope="col" style="min-width: 280px;">Product</th>
+                  <th scope="col" class="text-center" style="width: 140px;">Quantity</th>
+                  <th scope="col" class="text-end" style="width: 120px;">Price</th>
+                  <th scope="col" class="text-end" style="width: 120px;">Subtotal</th>
+                  <th scope="col" class="text-center" style="width: 60px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in cart_items %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="rounded-3 border" style="width: 64px; height: 64px; object-fit: cover;" onerror="this.src='/static/images/default_product.svg'">
+                        <div>
+                          <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('product_detail', product_id=item.product.id) }}" class="text-dark text-decoration-none">
+                              {{ item.product.name }}
+                            </a>
+                          </h6>
+                          <span class="badge bg-light text-muted border small">{{ item.product.category }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <div class="d-flex justify-content-center align-items-center gap-1">
+                        <form action="{{ url_for('update_cart_item', item_id=item.id) }}" method="POST" class="d-inline">
+                          <input type="hidden" name="action" value="decrease">
+                          <button type="submit" class="btn btn-sm btn-outline-secondary px-2 py-1"><i class="bi bi-dash"></i></button>
+                        </form>
+                        <span class="fw-bold px-2">{{ item.quantity }}</span>
+                        <form action="{{ url_for('update_cart_item', item_id=item.id) }}" method="POST" class="d-inline">
+                          <input type="hidden" name="action" value="increase">
+                          <button type="submit" class="btn btn-sm btn-outline-secondary px-2 py-1" {% if item.quantity >= item.product.stock %}disabled{% endif %}><i class="bi bi-plus"></i></button>
+                        </form>
+                      </div>
+                      <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">{{ item.product.stock }} in stock</small>
+                    </td>
+                    <td class="text-end fw-semibold">
+                      {{ item.product.price|inr }}
+                    </td>
+                    <td class="text-end fw-bold text-dark">
+                      {{ item.subtotal|inr }}
+                    </td>
+                    <td class="text-center">
+                      <form action="{{ url_for('remove_from_cart', item_id=item.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remove item">
+                          <i class="bi bi-trash3 fs-5"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('shop_list') }}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+            </a>
+            <form action="{{ url_for('clear_cart') }}" method="POST">
+              <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to empty your entire shopping cart?');">
+                <i class="bi bi-trash me-1"></i> Clear Cart
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Free shipping incentive banner -->
+        {% if subtotal < 999.0 %}
+          <div class="alert alert-info d-flex align-items-center rounded-4 shadow-sm" role="alert">
+            <i class="bi bi-truck fs-4 me-3 text-primary"></i>
+            <div>
+              <strong>Almost there!</strong> Add <strong>{{ (999.0 - subtotal)|inr }}</strong> more in supplies to qualify for <strong>FREE Delivery</strong>!
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-success d-flex align-items-center rounded-4 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+            <div>
+              <strong>Great news!</strong> Your order qualifies for <strong>FREE Delivery</strong>!
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Order Summary Card -->
+      <div class="col-lg-4">
+        <div class="cart-summary-card">
+          <h4 class="fw-bold mb-3">Order Summary</h4>
+          
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Items Subtotal</span>
+            <span class="fw-semibold">{{ subtotal|inr }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Shipping & Handling</span>
+            {% if shipping_fee == 0.0 %}
+              <span class="text-success fw-bold">FREE</span>
+            {% else %}
+              <span class="fw-semibold">{{ shipping_fee|inr }}</span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted">Estimated GST (5%)</span>
+            <span class="fw-semibold">{{ tax_amount|inr }}</span>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="d-flex justify-content-between align-items-baseline mb-4">
+            <span class="h5 fw-bold mb-0">Total Amount</span>
+            <span class="display-6 fw-bold text-dark">{{ grand_total|inr }}</span>
+          </div>
+
+          <a href="{{ url_for('checkout') }}" class="btn btn-secondary-custom btn-lg w-100 py-3 fw-bold">
+            <i class="bi bi-credit-card-2-front me-1"></i> Proceed to Checkout
+          </a>
+
+          <div class="text-center mt-3 text-muted small">
+            <i class="bi bi-shield-lock me-1"></i> Safe & Secure Simulated Payment
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+      <div class="d-inline-flex p-3 rounded-circle bg-light text-muted mb-3 mx-auto">
+        <i class="bi bi-cart-x fs-1"></i>
+      </div>
+      <h3 class="fw-bold">Your Cart is Currently Empty</h3>
+      <p class="text-muted mx-auto" style="max-width: 480px;">
+        Looks like you haven't added any pet supplies or accessories yet. Explore our top-tier pet nutrition, toys, and care essentials.
+      </p>
+      <div class="mt-3">
+        <a href="{{ url_for('shop_list') }}" class="btn btn-secondary-custom px-4 py-2">
+          <i class="bi bi-bag-plus me-1"></i> Explore Pet Store
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

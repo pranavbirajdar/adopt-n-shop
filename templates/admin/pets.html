@@ -1,0 +1,111 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Pet Management – Adopt n Shop Admin{% endblock %}
+{% block page_title %}Pet Shelter & Rescue Records{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-1">All Shelter Pets ({{ pets|length }})</h4>
+    <p class="text-muted small mb-0">Add new rescue pets, update medical/adoption status, and manage listings.</p>
+  </div>
+  <a href="{{ url_for('admin_pet_new') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i> Add New Pet
+  </a>
+</div>
+
+<!-- Search & Status Filter -->
+<div class="admin-card p-3 mb-4">
+  <form action="{{ url_for('admin_pets') }}" method="GET" class="row g-2 align-items-center">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" name="q" value="{{ search }}" class="form-control border-start-0" placeholder="Search by pet name, breed...">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <select name="status" class="form-select">
+        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+        <option value="available" {% if selected_status == 'available' %}selected{% endif %}>Available</option>
+        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending Application</option>
+        <option value="adopted" {% if selected_status == 'adopted' %}selected{% endif %}>Adopted</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+      <a href="{{ url_for('admin_pets') }}" class="btn btn-light border" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+    </div>
+  </form>
+</div>
+
+<!-- Pets Data Table -->
+<div class="admin-card">
+  <div class="table-responsive">
+    <table class="table admin-table align-middle">
+      <thead>
+        <tr>
+          <th>Pet Profile</th>
+          <th>Species & Breed</th>
+          <th>Age / Gender</th>
+          <th>Health Status</th>
+          <th>Adoption Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pet in pets %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <img src="{{ pet.image_url }}" alt="{{ pet.name }}" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+                <div>
+                  <h6 class="fw-bold mb-0 text-dark">{{ pet.name }}</h6>
+                  <small class="text-muted">ID: #{{ pet.id }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong>{{ pet.species }}</strong><br>
+              <small class="text-muted">{{ pet.breed }}</small>
+            </td>
+            <td>
+              {{ pet.age_display }}<br>
+              <small class="text-muted">{{ pet.gender }} • {{ pet.size }}</small>
+            </td>
+            <td>
+              {% if pet.vaccinated %}
+                <span class="badge bg-success-subtle text-success mb-1"><i class="bi bi-check-lg"></i> Vaccinated</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning mb-1">Needs Shots</span>
+              {% endif %}
+              <small class="text-muted d-block" style="max-width: 180px;" title="{{ pet.health_status }}">{{ pet.health_status[:30] }}...</small>
+            </td>
+            <td>
+              <span class="badge badge-{{ pet.status }}">{{ pet.status.capitalize() }}</span>
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('pet_detail', pet_id=pet.id) }}" class="btn btn-sm btn-light border" title="Preview" target="_blank">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{{ url_for('admin_pet_edit', pet_id=pet.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form action="{{ url_for('admin_pet_delete', pet_id=pet.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to remove {{ pet.name }} from the shelter database?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">
+              No pets found matching the criteria.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

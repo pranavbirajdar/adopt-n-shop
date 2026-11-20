@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed #{{ order.order_number }} – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white text-center p-4 p-md-5">
+        <div class="d-inline-flex p-3 rounded-circle text-white mb-3 mx-auto" style="width: 80px; height: 80px; background-color: #10b981; font-size: 2.2rem; align-items: center; justify-content: center;">
+          <i class="bi bi-check-lg"></i>
+        </div>
+
+        <span class="badge bg-success-subtle text-success fs-6 border border-success-subtle px-3 py-2 rounded-pill mx-auto mb-2">
+          Payment & Order Successful
+        </span>
+        <h1 class="display-6 fw-bold mb-2">Thank You For Your Order!</h1>
+        <p class="text-muted mb-4">
+          We have received your order and our fulfillment team has started preparing your pet supplies.
+        </p>
+
+        <!-- Order Summary Pill -->
+        <div class="p-3 bg-light rounded-4 border mb-4 text-start">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <small class="text-muted d-block">Order Reference Number</small>
+              <strong class="fs-6 text-dark">{{ order.order_number }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <small class="text-muted d-block">Order Placed On</small>
+              <strong class="fs-6 text-dark">{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <small class="text-muted d-block">Simulated Payment Method</small>
+              <strong class="fs-6 text-dark">{{ order.payment_method }} ({{ order.payment_status }})</strong>
+            </div>
+            <div class="col-sm-6">
+              <small class="text-muted d-block">Total Amount Paid</small>
+              <strong class="fs-6 text-dark">${{ "%.2f"|format(order.total_amount) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipping Destination -->
+        <div class="text-start mb-4 p-3 bg-white border rounded-3">
+          <h6 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-teal me-1" style="color: var(--primary);"></i> Shipping Destination:</h6>
+          <p class="mb-0 text-muted small">
+            <strong>{{ order.shipping_name }}</strong> • {{ order.shipping_phone }}<br>
+            {{ order.shipping_address }}, {{ order.shipping_city }} - {{ order.shipping_pincode }}
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-receipt me-1"></i> View Order Details & Invoice
+          </a>
+          <a href="{{ url_for('my_orders') }}" class="btn btn-outline-primary px-4 py-2">
+            <i class="bi bi-clock-history me-1"></i> Track Order History
+          </a>
+          <a href="{{ url_for('shop_list') }}" class="btn btn-light border px-4 py-2">
+            <i class="bi bi-arrow-left me-1"></i> Back to Store
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

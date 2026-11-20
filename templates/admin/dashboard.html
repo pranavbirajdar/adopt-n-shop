@@ -1,0 +1,226 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Dashboard Overview – Adopt n Shop Admin{% endblock %}
+{% block page_title %}Dashboard & Analytics Overview{% endblock %}
+
+{% block content %}
+<!-- KPI Metric Cards Grid -->
+<div class="row g-3 mb-4">
+  <!-- Revenue Card -->
+  <div class="col-xl-3 col-md-6">
+    <div class="admin-stat-card">
+      <div>
+        <small class="text-muted fw-semibold d-block mb-1">Total Store Revenue</small>
+        <h3 class="fw-bold mb-0 text-dark">${{ "%.2f"|format(total_revenue) }}</h3>
+        <small class="text-success"><i class="bi bi-graph-up-arrow me-1"></i> Lifetime sales</small>
+      </div>
+      <div class="stat-icon-wrapper bg-teal-light">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Available Pets Card -->
+  <div class="col-xl-3 col-md-6">
+    <div class="admin-stat-card">
+      <div>
+        <small class="text-muted fw-semibold d-block mb-1">Available Pets</small>
+        <h3 class="fw-bold mb-0 text-dark">{{ available_pets }} <span class="fs-6 text-muted font-monospace">/ {{ total_pets }}</span></h3>
+        <small class="text-primary"><i class="bi bi-heart-fill me-1"></i> Waiting for homes</small>
+      </div>
+      <div class="stat-icon-wrapper bg-blue-light">
+        <i class="bi bi-balloon-heart"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Adoptions Card -->
+  <div class="col-xl-3 col-md-6">
+    <div class="admin-stat-card">
+      <div>
+        <small class="text-muted fw-semibold d-block mb-1">Pending Adoptions</small>
+        <h3 class="fw-bold mb-0 text-dark">{{ pending_adoptions }}</h3>
+        <small class="text-warning"><i class="bi bi-clock-history me-1"></i> Action needed</small>
+      </div>
+      <div class="stat-icon-wrapper bg-amber-light">
+        <i class="bi bi-envelope-paper-heart"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Orders Card -->
+  <div class="col-xl-3 col-md-6">
+    <div class="admin-stat-card">
+      <div>
+        <small class="text-muted fw-semibold d-block mb-1">Total Customer Orders</small>
+        <h3 class="fw-bold mb-0 text-dark">{{ total_orders }}</h3>
+        <small class="text-secondary"><i class="bi bi-box-seam me-1"></i> {{ total_products }} active products</small>
+      </div>
+      <div class="stat-icon-wrapper bg-orange-light">
+        <i class="bi bi-receipt"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Visualization Grid -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-4">
+    <div class="admin-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0">Pet Species Breakdown</h6>
+        <span class="badge bg-light text-muted border">Shelter Data</span>
+      </div>
+      <div style="position: relative; height: 260px;">
+        <canvas id="speciesChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="admin-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0">Product Inventory by Category</h6>
+        <span class="badge bg-light text-muted border">Store Items</span>
+      </div>
+      <div style="position: relative; height: 260px;">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="admin-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0">Order Statuses</h6>
+        <span class="badge bg-light text-muted border">Fulfillment</span>
+      </div>
+      <div style="position: relative; height: 260px;">
+        <canvas id="orderStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Data Tables Grid -->
+<div class="row g-4">
+  <!-- Recent Orders Table -->
+  <div class="col-lg-7">
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h6 class="fw-bold mb-0"><i class="bi bi-receipt me-1"></i> Recent Orders</h6>
+        <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table admin-table align-middle">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ord in recent_orders %}
+              <tr>
+                <td>
+                  <strong>{{ ord.order_number }}</strong><br>
+                  <small class="text-muted">{{ ord.created_at.strftime('%b %d, %Y') }}</small>
+                </td>
+                <td>
+                  {{ ord.shipping_name }}<br>
+                  <small class="text-muted">{{ ord.shipping_phone }}</small>
+                </td>
+                <td class="fw-bold">${{ "%.2f"|format(ord.total_amount) }}</td>
+                <td>
+                  {% if ord.status == 'Delivered' %}
+                    <span class="badge bg-success">Delivered</span>
+                  {% elif ord.status == 'Shipped' %}
+                    <span class="badge bg-primary">Shipped</span>
+                  {% elif ord.status == 'Processing' %}
+                    <span class="badge bg-info text-dark">Processing</span>
+                  {% elif ord.status == 'Cancelled' %}
+                    <span class="badge bg-danger">Cancelled</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('admin_order_detail', order_id=ord.id) }}" class="btn btn-sm btn-light border">
+                    Manage
+                  </a>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-center text-muted py-3">No orders placed yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Adoption Applications & Low Stock Alerts -->
+  <div class="col-lg-5">
+    <!-- Adoption Applications -->
+    <div class="admin-card mb-4">
+      <div class="admin-card-header">
+        <h6 class="fw-bold mb-0"><i class="bi bi-balloon-heart me-1"></i> Latest Adoption Inquiries</h6>
+        <a href="{{ url_for('admin_adoptions') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table admin-table align-middle">
+          <tbody>
+            {% for req in recent_adoptions %}
+              <tr>
+                <td>
+                  <strong>{{ req.full_name }}</strong> applied for <strong>{{ req.pet.name }}</strong><br>
+                  <small class="text-muted">{{ req.created_at.strftime('%b %d, %Y') }} • {{ req.living_situation }}</small>
+                </td>
+                <td class="text-end">
+                  <span class="badge badge-{{ req.status }}">{{ req.status.capitalize() }}</span>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="2" class="text-center text-muted py-3">No adoption applications pending.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Low Stock Inventory Alert -->
+    <div class="admin-card">
+      <div class="admin-card-header bg-warning-subtle">
+        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Inventory Stock Alerts</h6>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-sm btn-outline-dark">Update Stock</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table admin-table align-middle">
+          <tbody>
+            {% for prod in low_stock_products %}
+              <tr>
+                <td>
+                  <span class="fw-semibold">{{ prod.name }}</span><br>
+                  <small class="text-muted">{{ prod.category }}</small>
+                </td>
+                <td class="text-end">
+                  {% if prod.stock == 0 %}
+                    <span class="badge bg-danger">Sold Out (0)</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">{{ prod.stock }} units left</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="2" class="text-center text-muted py-3">All products are healthy in stock.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Manage Order #{{ order.order_number }} – Adopt n Shop Admin{% endblock %}
+{% block page_title %}Order Details & Fulfillment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="admin-card p-4 p-md-5 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 border-bottom mb-4">
+        <div>
+          <span class="badge bg-light text-secondary border mb-1">Order #{{ order.order_number }}</span>
+          <h3 class="fw-bold mb-0">Fulfillment Management</h3>
+          <small class="text-muted">Placed on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+        </div>
+        <a href="{{ url_for('admin_orders') }}" class="btn btn-light border btn-sm mt-2 mt-md-0">
+          <i class="bi bi-arrow-left me-1"></i> Back to Orders
+        </a>
+      </div>
+
+      <!-- Live Status Updater Box -->
+      <div class="p-4 bg-light rounded-4 border mb-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-sliders me-2 text-primary"></i> Update Fulfillment Status</h5>
+        <form action="{{ url_for('admin_order_update_status', order_id=order.id) }}" method="POST" class="row g-3 align-items-center">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Current Status:</label>
+            <select name="status" class="form-select form-select-lg">
+              {% for st in statuses %}
+                <option value="{{ st }}" {% if order.status == st %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+              <i class="bi bi-check2-circle me-1"></i> Update Status
+            </button>
+          </div>
+        </form>
+        <small class="text-muted d-block mt-2">
+          Note: If set to 'Cancelled', reserved item quantities are automatically restored to store inventory.
+        </small>
+      </div>
+
+      <!-- Shipping & Customer Info Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="p-3 bg-white rounded-3 border h-100">
+            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-geo-alt-fill text-teal me-1" style="color: var(--primary);"></i> Delivery Address</h6>
+            <p class="small text-secondary mb-0">
+              <strong>{{ order.shipping_name }}</strong><br>
+              Phone: {{ order.shipping_phone }}<br>
+              {{ order.shipping_address }}<br>
+              {{ order.shipping_city }} - {{ order.shipping_pincode }}
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="p-3 bg-white rounded-3 border h-100">
+            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-person-fill text-secondary me-1" style="color: var(--secondary);"></i> Customer Account</h6>
+            <p class="small text-secondary mb-0">
+              <strong>Registered User:</strong> {{ order.user.name }}<br>
+              <strong>Email:</strong> {{ order.user.email }}<br>
+              <strong>Payment Method:</strong> {{ order.payment_method }} ({{ order.payment_status }})
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchased Items Table -->
+      <h5 class="fw-bold mb-3">Purchased Order Items</h5>
+      <div class="table-responsive mb-4">
+        <table class="table admin-table align-middle">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="text-center">Unit Price</th>
+              <th class="text-center">Quantity</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items %}
+              <tr>
+                <td>
+                  <strong>{{ item.product_name }}</strong>
+                </td>
+                <td class="text-center">${{ "%.2f"|format(item.price) }}</td>
+                <td class="text-center font-monospace">{{ item.quantity }}</td>
+                <td class="text-end fw-bold text-dark">${{ "%.2f"|format(item.subtotal) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Summary Box -->
+      <div class="row justify-content-end">
+        <div class="col-md-5">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="d-flex justify-content-between mb-1 small">
+              <span class="text-muted">Subtotal:</span>
+              <span>${{ "%.2f"|format(order.subtotal_amount) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1 small">
+              <span class="text-muted">Shipping:</span>
+              <span>${{ "%.2f"|format(order.shipping_fee) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 small">
+              <span class="text-muted">Tax (5%):</span>
+              <span>${{ "%.2f"|format(order.tax_amount) }}</span>
+            </div>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <span class="fw-bold">Total Amount:</span>
+              <span class="fs-4 fw-bold text-dark">${{ "%.2f"|format(order.total_amount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

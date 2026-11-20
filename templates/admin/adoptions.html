@@ -1,0 +1,162 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Manage Adoption Applications – Adopt n Shop Admin{% endblock %}
+{% block page_title %}Pet Adoption Applications{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-1">Adoption Inquiries ({{ adoptions|length }})</h4>
+    <p class="text-muted small mb-0">Evaluate prospective adopter homes, verify living conditions, and approve or reject applications.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin_adoptions', status='all') }}" class="btn btn-sm {% if selected_status == 'all' %}btn-primary{% else %}btn-light border{% endif %}">All</a>
+    <a href="{{ url_for('admin_adoptions', status='pending') }}" class="btn btn-sm {% if selected_status == 'pending' %}btn-warning text-dark fw-bold{% else %}btn-light border{% endif %}">Pending Review</a>
+    <a href="{{ url_for('admin_adoptions', status='approved') }}" class="btn btn-sm {% if selected_status == 'approved' %}btn-success text-white fw-bold{% else %}btn-light border{% endif %}">Approved</a>
+    <a href="{{ url_for('admin_adoptions', status='rejected') }}" class="btn btn-sm {% if selected_status == 'rejected' %}btn-danger text-white fw-bold{% else %}btn-light border{% endif %}">Rejected</a>
+  </div>
+</div>
+
+<div class="admin-card">
+  <div class="table-responsive">
+    <table class="table admin-table align-middle">
+      <thead>
+        <tr>
+          <th>Application ID</th>
+          <th>Pet Requested</th>
+          <th>Applicant Profile</th>
+          <th>Housing & Experience</th>
+          <th>Status</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in adoptions %}
+          <tr>
+            <td>
+              <strong>#{{ app.id }}</strong><br>
+              <small class="text-muted">{{ app.created_at.strftime('%b %d, %Y') }}</small>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ app.pet.image_url }}" alt="{{ app.pet.name }}" class="rounded border" style="width: 44px; height: 44px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+                <div>
+                  <h6 class="fw-bold mb-0 text-dark">{{ app.pet.name }}</h6>
+                  <small class="text-muted">{{ app.pet.species }} ({{ app.pet.breed }})</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong>{{ app.full_name }}</strong><br>
+              <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ app.phone }}</small><br>
+              <small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ app.user.email }}</small>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ app.living_situation }}</span><br>
+              {% if app.has_other_pets %}
+                <small class="text-primary"><i class="bi bi-check2 me-1"></i>Has other pets</small>
+              {% else %}
+                <small class="text-muted">No other pets</small>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ app.status }}">{{ app.status.capitalize() }}</span>
+            </td>
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal{{ app.id }}">
+                <i class="bi bi-eye me-1"></i> Review & Decide
+              </button>
+            </td>
+          </tr>
+
+          <!-- Review Modal for Request #{{ app.id }} -->
+          <div class="modal fade" id="reviewModal{{ app.id }}" tabindex="-1" aria-labelledby="reviewModalLabel{{ app.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom">
+                  <h5 class="modal-title fw-bold" id="reviewModalLabel{{ app.id }}">
+                    Review Adoption Request #{{ app.id }} – {{ app.pet.name }}
+                  </h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form action="{{ url_for('admin_adoption_update_status', request_id=app.id) }}" method="POST">
+                  <div class="modal-body p-4">
+                    <!-- Applicant Info Overview -->
+                    <div class="row g-3 p-3 bg-light rounded-3 border mb-4">
+                      <div class="col-sm-6">
+                        <small class="text-muted d-block">Applicant Name</small>
+                        <strong>{{ app.full_name }}</strong>
+                      </div>
+                      <div class="col-sm-6">
+                        <small class="text-muted d-block">Phone / Email</small>
+                        <span>{{ app.phone }} • {{ app.user.email }}</span>
+                      </div>
+                      <div class="col-12">
+                        <small class="text-muted d-block">Residence Address</small>
+                        <span>{{ app.address }}</span>
+                      </div>
+                      <div class="col-sm-6">
+                        <small class="text-muted d-block">Housing Type</small>
+                        <span>{{ app.living_situation }}</span>
+                      </div>
+                      <div class="col-sm-6">
+                        <small class="text-muted d-block">Other Pets at Home?</small>
+                        <span>{{ 'Yes' if app.has_other_pets else 'No other pets' }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Questionnaire Answers -->
+                    <div class="mb-3">
+                      <h6 class="fw-bold mb-1">Previous Pet Experience:</h6>
+                      <p class="text-secondary small bg-white p-3 rounded border">
+                        {{ app.previous_experience or 'None specified.' }}
+                      </p>
+                    </div>
+
+                    <div class="mb-4">
+                      <h6 class="fw-bold mb-1">Adoption Motivation & Care Plan:</h6>
+                      <p class="text-secondary small bg-white p-3 rounded border">
+                        {{ app.reason }}
+                      </p>
+                    </div>
+
+                    <!-- Decision Inputs -->
+                    <h6 class="fw-bold text-dark border-top pt-3 mb-3">Shelter Officer Decision:</h6>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Application Status</label>
+                        <select name="status" class="form-select" required>
+                          <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>Pending Under Review</option>
+                          <option value="approved" {% if app.status == 'approved' %}selected{% endif %}>Approve (Mark Pet as Adopted)</option>
+                          <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Reject Application</option>
+                        </select>
+                      </div>
+
+                      <div class="col-12">
+                        <label class="form-label fw-semibold">Admin Notes / Feedback to Applicant</label>
+                        <textarea name="admin_notes" rows="3" class="form-control" placeholder="Add shelter feedback visible to the customer in their tracker...">{{ app.admin_notes or '' }}</textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary px-4">Save Decision</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">
+              No adoption requests found for this filter.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

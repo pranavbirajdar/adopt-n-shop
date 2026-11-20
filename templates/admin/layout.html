@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin Portal – Adopt n Shop{% endblock %}</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+
+  <!-- Admin Sidebar Navigation -->
+  <aside class="admin-sidebar">
+    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-brand">
+      <div class="brand-logo-sq">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+      <div>
+        Adopt<span style="color: var(--secondary);">Admin</span>
+      </div>
+    </a>
+
+    <div class="sidebar-nav">
+      <div class="sidebar-heading">Analytics & Overview</div>
+      <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+
+      <div class="sidebar-heading">Shelter & Adoptions</div>
+      <a href="{{ url_for('admin_pets') }}" class="sidebar-link {% if request.endpoint in ['admin_pets', 'admin_pet_new', 'admin_pet_edit'] %}active{% endif %}">
+        <i class="bi bi-balloon-heart"></i> Pet Management
+      </a>
+      <a href="{{ url_for('admin_listing_approvals') }}" class="sidebar-link {% if request.endpoint == 'admin_listing_approvals' %}active{% endif %}">
+        <i class="bi bi-shield-check"></i> Pet Listing Approvals
+        {% if pending_listings_count > 0 %}
+          <span class="badge bg-warning text-dark">{{ pending_listings_count }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('admin_adoptions') }}" class="sidebar-link {% if request.endpoint == 'admin_adoptions' %}active{% endif %}">
+        <i class="bi bi-envelope-paper-heart"></i> Adoption Requests
+        {% if pending_adoptions_count > 0 %}
+          <span class="badge bg-warning text-dark">{{ pending_adoptions_count }}</span>
+        {% endif %}
+      </a>
+
+      <div class="sidebar-heading">Store & Inventory</div>
+      <a href="{{ url_for('admin_products') }}" class="sidebar-link {% if request.endpoint in ['admin_products', 'admin_product_new', 'admin_product_edit'] %}active{% endif %}">
+        <i class="bi bi-box-seam"></i> Products & Stock
+      </a>
+      <a href="{{ url_for('admin_orders') }}" class="sidebar-link {% if request.endpoint in ['admin_orders', 'admin_order_detail'] %}active{% endif %}">
+        <i class="bi bi-receipt"></i> Customer Orders
+      </a>
+
+      <div class="sidebar-heading">User Management</div>
+      <a href="{{ url_for('admin_customers') }}" class="sidebar-link {% if request.endpoint == 'admin_customers' %}active{% endif %}">
+        <i class="bi bi-people"></i> Customers
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm w-100 mb-2">
+        <i class="bi bi-box-arrow-up-right me-1"></i> View Live Store
+      </a>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm w-100">
+        <i class="bi bi-box-arrow-right me-1"></i> Log Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Admin Main Content Area -->
+  <div class="admin-main">
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button id="sidebarToggle" class="btn btn-light d-lg-none border" type="button">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <h5 class="fw-bold mb-0 text-dark">
+          {% block page_title %}Dashboard Overview{% endblock %}
+        </h5>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-light text-dark border p-2 d-none d-sm-inline-flex align-items-center">
+          <i class="bi bi-person-badge text-teal me-1" style="color: var(--primary);"></i>
+          {{ current_user.name }} (Administrator)
+        </span>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-house me-1"></i> Storefront
+        </a>
+      </div>
+    </header>
+
+    <!-- Admin Body Content & Flash Messages -->
+    <div class="admin-content">
+      <!-- Flash Messages Container -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm d-flex align-items-center mb-4" role="alert">
+              <i class="bi {% if category == 'success' %}bi-check-circle-fill{% elif category == 'danger' or category == 'error' %}bi-exclamation-triangle-fill{% elif category == 'warning' %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %} me-2 fs-5"></i>
+              <div>{{ message }}</div>
+              <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  
+  <!-- Custom Common and Admin JS -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

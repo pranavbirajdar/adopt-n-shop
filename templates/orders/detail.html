@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.order_number }} – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4 d-print-none">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('my_orders') }}">My Orders</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ order.order_number }}</li>
+    </ol>
+  </nav>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 p-md-5 mb-4">
+    <!-- Invoice Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start border-bottom pb-4 mb-4">
+      <div>
+        <span class="badge bg-light text-secondary border mb-2">Order Invoice</span>
+        <h2 class="fw-bold mb-1">Order #{{ order.order_number }}</h2>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-calendar3 me-1"></i> Placed on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+        </p>
+      </div>
+      <div class="text-md-end mt-3 mt-md-0 d-print-none">
+        <button class="btn btn-outline-secondary btn-sm me-2" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i> Print Invoice
+        </button>
+        {% if current_user.is_admin %}
+          <a href="{{ url_for('admin_orders') }}" class="btn btn-light border btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Admin Orders
+          </a>
+        {% else %}
+          <a href="{{ url_for('my_orders') }}" class="btn btn-light border btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to My Orders
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Live Status Tracker Timeline (if not cancelled) -->
+    {% if order.status != 'Cancelled' %}
+      <div class="mb-5 d-print-none">
+        <h6 class="fw-bold text-dark mb-4 text-center">Fulfillment & Delivery Progress</h6>
+        <div class="order-timeline">
+          <!-- Step 1: Placed / Pending -->
+          <div class="timeline-step {% if order.status in ['Pending', 'Processing', 'Shipped', 'Delivered'] %}completed{% endif %}">
+            <div class="timeline-icon"><i class="bi bi-check-lg"></i></div>
+            <div class="timeline-label">Order Placed</div>
+          </div>
+          <!-- Step 2: Processing -->
+          <div class="timeline-step {% if order.status in ['Processing', 'Shipped', 'Delivered'] %}completed{% elif order.status == 'Pending' %}active{% endif %}">
+            <div class="timeline-icon">
+              {% if order.status in ['Processing', 'Shipped', 'Delivered'] %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-gear"></i>{% endif %}
+            </div>
+            <div class="timeline-label">Processing</div>
+          </div>
+          <!-- Step 3: Shipped -->
+          <div class="timeline-step {% if order.status in ['Shipped', 'Delivered'] %}completed{% elif order.status == 'Processing' %}active{% endif %}">
+            <div class="timeline-icon">
+              {% if order.status in ['Shipped', 'Delivered'] %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-truck"></i>{% endif %}
+            </div>
+            <div class="timeline-label">Shipped</div>
+          </div>
+          <!-- Step 4: Delivered -->
+          <div class="timeline-step {% if order.status == 'Delivered' %}completed{% elif order.status == 'Shipped' %}active{% endif %}">
+            <div class="timeline-icon">
+              {% if order.status == 'Delivered' %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-box-seam"></i>{% endif %}
+            </div>
+            <div class="timeline-label">Delivered</div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-danger mb-4" role="alert">
+        <i class="bi bi-x-circle-fill me-2 fs-5"></i>
+        <strong>Order Cancelled:</strong> This order has been cancelled and any reserved inventory has been replenished.
+      </div>
+    {% endif %}
+
+    <!-- Customer & Destination Details Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="p-3 bg-light rounded-3 h-100 border">
+          <h6 class="fw-bold text-dark mb-2"><i class="bi bi-geo-alt-fill text-teal me-1" style="color: var(--primary);"></i> Shipping Destination</h6>
+          <p class="mb-0 text-secondary small">
+            <strong>{{ order.shipping_name }}</strong><br>
+            Phone: {{ order.shipping_phone }}<br>
+            {{ order.shipping_address }}<br>
+            {{ order.shipping_city }} - {{ order.shipping_pincode }}
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-3 bg-light rounded-3 h-100 border">
+          <h6 class="fw-bold text-dark mb-2"><i class="bi bi-credit-card-2-front text-secondary me-1" style="color: var(--secondary);"></i> Payment & Billing</h6>
+          <p class="mb-0 text-secondary small">
+            <strong>Method:</strong> {{ order.payment_method }}<br>
+            <strong>Payment Status:</strong> 
+            {% if order.payment_status == 'Paid' %}
+              <span class="badge bg-success-subtle text-success">Paid Successfully</span>
+            {% else %}
+              <span class="badge bg-warning-subtle text-warning">Pending (Pay upon Delivery)</span>
+            {% endif %}<br>
+            <strong>Customer Email:</strong> {{ order.user.email }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="table-responsive mb-4">
+      <table class="table align-middle cart-table">
+        <thead>
+          <tr>
+            <th scope="col">Purchased Item</th>
+            <th scope="col" class="text-center">Unit Price</th>
+            <th scope="col" class="text-center">Quantity</th>
+            <th scope="col" class="text-end">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  {% if item.product %}
+                    <img src="{{ item.product.image_url }}" alt="{{ item.product_name }}" class="rounded border" style="width: 45px; height: 45px; object-fit: cover;" onerror="this.src='/static/images/default_product.svg'">
+                  {% else %}
+                    <span class="badge bg-light text-dark border p-2"><i class="bi bi-box"></i></span>
+                  {% endif %}
+                  <div>
+                    <h6 class="fw-bold mb-0 text-dark">{{ item.product_name }}</h6>
+                    {% if item.product %}
+                      <small class="text-muted">{{ item.product.category }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">${{ "%.2f"|format(item.price) }}</td>
+              <td class="text-center font-monospace">{{ item.quantity }}</td>
+              <td class="text-end fw-bold text-dark">${{ "%.2f"|format(item.subtotal) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals Summary Breakdown -->
+    <div class="row justify-content-end">
+      <div class="col-md-5 col-lg-4">
+        <div class="p-3 bg-light rounded-3 border">
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Items Subtotal:</span>
+            <span class="fw-semibold">${{ "%.2f"|format(order.subtotal_amount) }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Shipping & Handling:</span>
+            <span>{% if order.shipping_fee == 0.0 %}<strong class="text-success">FREE</strong>{% else %}${{ "%.2f"|format(order.shipping_fee) }}{% endif %}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Taxes (5%):</span>
+            <span>${{ "%.2f"|format(order.tax_amount) }}</span>
+          </div>
+          <hr class="my-2">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <span class="fw-bold fs-6">Grand Total:</span>
+            <span class="fs-4 fw-bold text-dark">${{ "%.2f"|format(order.total_amount) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

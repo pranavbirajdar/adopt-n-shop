@@ -1,0 +1,256 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Pet Listing Approvals – Adopt n Shop Admin{% endblock %}
+{% block page_title %}Customer Pet Listing Approvals{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-1">Customer Pet Submissions</h4>
+    <p class="text-muted small mb-0">
+      Review and verify pet listings submitted by registered pet parents before they appear on the public storefront.
+    </p>
+  </div>
+  <a href="{{ url_for('admin_pets') }}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-shield-check me-1"></i> Shelter Pet Management
+  </a>
+</div>
+
+<!-- Tab Navigation -->
+<div class="admin-card mb-4 p-2">
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'pending' %}active{% endif %}" href="{{ url_for('admin_listing_approvals', tab='pending') }}">
+        <i class="bi bi-hourglass-split me-1"></i> Pending Review
+        {% if pending_count > 0 %}
+          <span class="badge bg-warning text-dark ms-1">{{ pending_count }}</span>
+        {% endif %}
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'approved' %}active{% endif %}" href="{{ url_for('admin_listing_approvals', tab='approved') }}">
+        <i class="bi bi-check-circle me-1"></i> Approved Listings
+        <span class="badge bg-light text-dark ms-1">{{ approved_count }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'rejected' %}active{% endif %}" href="{{ url_for('admin_listing_approvals', tab='rejected') }}">
+        <i class="bi bi-x-circle me-1"></i> Rejected Listings
+        <span class="badge bg-light text-dark ms-1">{{ rejected_count }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'all' %}active{% endif %}" href="{{ url_for('admin_listing_approvals', tab='all') }}">
+        <i class="bi bi-list-ul me-1"></i> All Submissions
+        <span class="badge bg-light text-dark ms-1">{{ total_count }}</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<!-- Listings Table / Cards -->
+<div class="admin-card">
+  {% if listings %}
+    <div class="table-responsive">
+      <table class="table admin-table align-middle">
+        <thead>
+          <tr>
+            <th style="min-width: 250px;">Pet Details</th>
+            <th>Submitted By</th>
+            <th>Location</th>
+            <th>Rehoming Fee</th>
+            <th>Approval Status</th>
+            <th class="text-end" style="min-width: 180px;">Admin Review</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pet in listings %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="{{ pet.image_url }}" alt="{{ pet.name }}" class="rounded-3 border" style="width: 56px; height: 56px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+                  <div>
+                    <h6 class="fw-bold mb-0 text-dark">{{ pet.name }}</h6>
+                    <small class="text-muted">{{ pet.breed }} ({{ pet.species }})</small><br>
+                    <small class="text-secondary">{{ pet.gender }} • {{ pet.age_display }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% if pet.owner %}
+                  <strong>{{ pet.owner.name }}</strong><br>
+                  <small class="text-muted">{{ pet.owner.email }}</small><br>
+                  <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ pet.contact_phone or pet.owner.phone or 'N/A' }}</small>
+                {% else %}
+                  <span class="text-muted">Shelter Admin</span>
+                {% endif %}
+              </td>
+              <td>
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ pet.city }}<br>
+                <small class="text-muted">{{ pet.state }}</small>
+              </td>
+              <td>
+                {% if pet.rehoming_fee and pet.rehoming_fee > 0 %}
+                  <span class="fw-bold text-dark">{{ pet.rehoming_fee|inr }}</span><br>
+                  <small class="badge bg-light text-muted border">Rehoming Fee</small>
+                {% else %}
+                  <span class="badge bg-success-subtle text-success border">Free Adoption</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if pet.approval_status == 'approved' %}
+                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Approved</span>
+                {% elif pet.approval_status == 'rejected' %}
+                  <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Rejected</span>
+                  {% if pet.approval_notes %}
+                    <small class="d-block text-danger mt-1 text-truncate" style="max-width: 150px;" title="{{ pet.approval_notes }}">
+                      {{ pet.approval_notes }}
+                    </small>
+                  {% endif %}
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i> Pending Review</span>
+                {% endif %}
+                <small class="d-block text-muted mt-1">{{ pet.created_at.strftime('%b %d, %Y') }}</small>
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1">
+                  <!-- View Details Button (Modal Trigger) -->
+                  <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#viewPetModal{{ pet.id }}" title="View Full Profile">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  {% if pet.approval_status != 'approved' %}
+                    <!-- Quick Approve Form -->
+                    <form action="{{ url_for('admin_listing_action', pet_id=pet.id) }}" method="POST" class="d-inline">
+                      <input type="hidden" name="action" value="approve">
+                      <input type="hidden" name="notes" value="Verified and approved by shelter administrator.">
+                      <button type="submit" class="btn btn-sm btn-success" title="Approve Listing" onclick="return confirm('Approve {{ pet.name }} and publish to live catalogue?');">
+                        <i class="bi bi-check-lg"></i> Approve
+                      </button>
+                    </form>
+                  {% endif %}
+
+                  {% if pet.approval_status != 'rejected' %}
+                    <!-- Reject Trigger Button -->
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ pet.id }}" title="Reject Listing">
+                      <i class="bi bi-x-lg"></i> Reject
+                    </button>
+                  {% endif %}
+                </div>
+
+                <!-- Modal: View Pet Details -->
+                <div class="modal fade text-start" id="viewPetModal{{ pet.id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-lg">
+                    <div class="modal-content border-0 shadow">
+                      <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Review Pet Listing: {{ pet.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row g-3">
+                          <div class="col-md-5">
+                            <img src="{{ pet.image_url }}" alt="{{ pet.name }}" class="img-fluid rounded-3 border mb-2 w-100" style="max-height: 250px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+                            {% if pet.additional_images %}
+                              <div class="d-flex flex-wrap gap-2">
+                                {% for img in pet.additional_images.split(',') %}
+                                  {% if img.strip() %}
+                                    <img src="{{ img.strip() }}" alt="Extra" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
+                                  {% endif %}
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                          <div class="col-md-7">
+                            <h4 class="fw-bold mb-1">{{ pet.name }} ({{ pet.breed }})</h4>
+                            <p class="text-muted small mb-2">{{ pet.species }} • {{ pet.gender }} • {{ pet.size }} • {{ pet.age_display }}</p>
+                            
+                            <div class="p-3 bg-light rounded-3 border mb-3">
+                              <small class="text-muted d-block">Listing Caregiver Details:</small>
+                              <strong>{{ pet.owner.name if pet.owner else 'Shelter' }}</strong><br>
+                              <small>{{ pet.owner.email if pet.owner else '' }} | {{ pet.contact_phone or (pet.owner.phone if pet.owner else '') }}</small><br>
+                              <small><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ pet.city }}, {{ pet.state }}</small>
+                            </div>
+
+                            <div class="mb-2">
+                              <strong>Rehoming Fee:</strong> 
+                              {% if pet.rehoming_fee and pet.rehoming_fee > 0 %}
+                                <span class="fw-bold text-success">{{ pet.rehoming_fee|inr }}</span>
+                              {% else %}
+                                <span class="text-muted">Free Non-Commercial Adoption</span>
+                              {% endif %}
+                            </div>
+
+                            <div class="mb-2">
+                              <strong>Health & Medical:</strong>
+                              <span class="badge bg-light text-dark border ms-1">{{ 'Vaccinated' if pet.vaccinated else 'Needs Shots' }}</span>
+                              <p class="small text-muted mb-0 mt-1">{{ pet.health_status }}</p>
+                            </div>
+
+                            <div class="mb-2">
+                              <strong>Story / Description:</strong>
+                              <p class="small text-secondary mb-0">{{ pet.description }}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        {% if pet.approval_status != 'approved' %}
+                          <form action="{{ url_for('admin_listing_action', pet_id=pet.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="approve">
+                            <input type="hidden" name="notes" value="Verified and approved by shelter administrator.">
+                            <button type="submit" class="btn btn-success btn-sm">
+                              <i class="bi bi-check-lg me-1"></i> Approve Listing
+                            </button>
+                          </form>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Modal: Reject Listing -->
+                <div class="modal fade text-start" id="rejectModal{{ pet.id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content border-0 shadow">
+                      <form action="{{ url_for('admin_listing_action', pet_id=pet.id) }}" method="POST">
+                        <input type="hidden" name="action" value="reject">
+                        <div class="modal-header">
+                          <h5 class="modal-title fw-bold text-danger">Reject Listing: {{ pet.name }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <p class="text-muted small">
+                            Please provide feedback or the reason for rejection. The customer will see this message in their "My Listings" dashboard and can edit their submission accordingly.
+                          </p>
+                          <label class="form-label fw-semibold">Reason for Rejection <span class="text-danger">*</span></label>
+                          <textarea name="notes" rows="3" class="form-control" placeholder="e.g. Please provide a clear, original photo of the pet. High commercial rehoming fees are not permitted." required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-light border btn-sm" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-x-circle me-1"></i> Confirm Rejection
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <div class="d-inline-flex p-3 rounded-circle bg-light text-muted mb-3">
+        <i class="bi bi-shield-check fs-1 text-teal" style="color: var(--primary);"></i>
+      </div>
+      <h5 class="fw-bold">No Submissions Found</h5>
+      <p class="text-muted small mb-0">There are no customer pet listings matching this filter tab.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

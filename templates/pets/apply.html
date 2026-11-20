@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Adopt {{ pet.name }} – Adoption Application{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('pets_list') }}">Adopt Pets</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('pet_detail', pet_id=pet.id) }}">{{ pet.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Adoption Application</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Pet Preview Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="d-flex align-items-center gap-3">
+          <img src="{{ pet.image_url }}" alt="{{ pet.name }}" class="rounded-3 shadow-sm" style="width: 80px; height: 80px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+          <div>
+            <span class="badge bg-light text-primary border mb-1">{{ pet.species }} • {{ pet.breed }}</span>
+            <h4 class="fw-bold mb-0">Adopting {{ pet.name }}</h4>
+            <small class="text-muted">{{ pet.age_display }} • {{ pet.gender }} • {{ pet.size }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="mb-4">
+          <span class="section-tag">Shelter Application</span>
+          <h2 class="fw-bold mb-2">Pet Adoption Questionnaire</h2>
+          <p class="text-muted small">
+            To ensure the best possible match for {{ pet.name }} and your household, please provide accurate details below. Our shelter team typically reviews applications within 24-48 hours.
+          </p>
+        </div>
+
+        <form action="{{ url_for('pet_apply', pet_id=pet.id) }}" method="POST">
+          <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">1. Applicant Details</h5>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Applicant Full Name <span class="text-danger">*</span></label>
+              <input type="text" name="full_name" value="{{ current_user.name }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contact Phone Number <span class="text-danger">*</span></label>
+              <input type="tel" name="phone" value="{{ current_user.phone or '' }}" class="form-control" placeholder="+1 (555) 000-0000" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Residential Address <span class="text-danger">*</span></label>
+              <textarea name="address" rows="2" class="form-control" placeholder="Complete address including street, city, state, postal code" required>{{ current_user.address or '' }}</textarea>
+            </div>
+          </div>
+
+          <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">2. Living Environment & Pet Experience</h5>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Type of Residence <span class="text-danger">*</span></label>
+              <select name="living_situation" class="form-select" required>
+                <option value="Own House with Fenced Yard">Own House with Fenced Yard</option>
+                <option value="Own House without Fenced Yard">Own House without Fenced Yard</option>
+                <option value="Apartment / Condominium">Apartment / Condominium</option>
+                <option value="Rented House (Landlord Permitted)">Rented House (Landlord Permitted)</option>
+                <option value="Farm / Acreage">Farm / Acreage</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center">
+              <div class="form-check mt-3 mt-md-4">
+                <input class="form-check-input" type="checkbox" name="has_other_pets" id="has_other_pets">
+                <label class="form-check-label fw-semibold" for="has_other_pets">
+                  I currently have other pets living with me
+                </label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">Previous Pet Care Experience</label>
+              <textarea name="previous_experience" rows="2" class="form-control" placeholder="Describe any previous experience you have with dogs, cats, or training..."></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">Why do you want to adopt {{ pet.name }}? <span class="text-danger">*</span></label>
+              <textarea name="reason" rows="3" class="form-control" placeholder="Tell us about daily exercise plans, who will look after {{ pet.name }}, and your home routine..." required></textarea>
+            </div>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 mb-4 border">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="agree_terms" required>
+              <label class="form-check-label small text-muted" for="agree_terms">
+                I certify that all details submitted above are true and complete. I understand that the shelter may arrange a brief phone interview or home verification before final approval.
+              </label>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('pet_detail', pet_id=pet.id) }}" class="btn btn-light border">
+              <i class="bi bi-arrow-left me-1"></i> Back to Profile
+            </a>
+            <button type="submit" class="btn btn-secondary-custom px-4 py-2 fw-bold">
+              <i class="bi bi-send-fill me-1"></i> Submit Adoption Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

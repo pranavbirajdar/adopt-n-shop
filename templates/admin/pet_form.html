@@ -1,0 +1,134 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}{% if pet %}Edit Pet: {{ pet.name }}{% else %}Add New Pet{% endif %} – Adopt n Shop Admin{% endblock %}
+{% block page_title %}{% if pet %}Edit Pet Record: {{ pet.name }}{% else %}Add New Rescue Pet{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="admin-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+          <h4 class="fw-bold mb-1">{% if pet %}Edit {{ pet.name }}'s Profile{% else %}Register New Rescue Pet{% endif %}</h4>
+          <p class="text-muted small mb-0">Fill in detailed medical, physical, and background information for adopters.</p>
+        </div>
+        <a href="{{ url_for('admin_pets') }}" class="btn btn-light border btn-sm">
+          <i class="bi bi-arrow-left me-1"></i> Back to Pets
+        </a>
+      </div>
+
+      <form action="{% if pet %}{{ url_for('admin_pet_edit', pet_id=pet.id) }}{% else %}{{ url_for('admin_pet_new') }}{% endif %}" method="POST" enctype="multipart/form-data">
+        <div class="row g-3">
+          <!-- Pet Name -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Pet Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" value="{{ pet.name if pet else '' }}" class="form-control" placeholder="e.g. Charlie" required>
+          </div>
+
+          <!-- Species -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Species <span class="text-danger">*</span></label>
+            <select name="species" class="form-select" required>
+              <option value="Dog" {% if pet and pet.species == 'Dog' %}selected{% endif %}>Dog</option>
+              <option value="Cat" {% if pet and pet.species == 'Cat' %}selected{% endif %}>Cat</option>
+              <option value="Bird" {% if pet and pet.species == 'Bird' %}selected{% endif %}>Bird</option>
+              <option value="Rabbit" {% if pet and pet.species == 'Rabbit' %}selected{% endif %}>Rabbit</option>
+              <option value="Other" {% if pet and pet.species == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+
+          <!-- Breed -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Breed <span class="text-danger">*</span></label>
+            <input type="text" name="breed" value="{{ pet.breed if pet else '' }}" class="form-control" placeholder="e.g. Golden Retriever" required>
+          </div>
+
+          <!-- Age in Years -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Age (Years)</label>
+            <input type="number" name="age_years" value="{{ pet.age_years if pet else 0 }}" min="0" max="30" class="form-control">
+          </div>
+
+          <!-- Age in Months -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Age (Months)</label>
+            <input type="number" name="age_months" value="{{ pet.age_months if pet else 0 }}" min="0" max="11" class="form-control">
+          </div>
+
+          <!-- Gender -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Gender</label>
+            <select name="gender" class="form-select">
+              <option value="Male" {% if pet and pet.gender == 'Male' %}selected{% endif %}>Male</option>
+              <option value="Female" {% if pet and pet.gender == 'Female' %}selected{% endif %}>Female</option>
+            </select>
+          </div>
+
+          <!-- Size -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Size</label>
+            <select name="size" class="form-select">
+              <option value="Small" {% if pet and pet.size == 'Small' %}selected{% endif %}>Small</option>
+              <option value="Medium" {% if not pet or pet.size == 'Medium' %}selected{% endif %}>Medium</option>
+              <option value="Large" {% if pet and pet.size == 'Large' %}selected{% endif %}>Large</option>
+            </select>
+          </div>
+
+          <!-- Health Status -->
+          <div class="col-md-8">
+            <label class="form-label fw-semibold">Veterinary & Medical Summary</label>
+            <input type="text" name="health_status" value="{{ pet.health_status if pet else 'Healthy, up to date on checkups' }}" class="form-control">
+          </div>
+
+          <!-- Vaccinated Checkbox -->
+          <div class="col-md-4 d-flex align-items-center">
+            <div class="form-check mt-md-4">
+              <input class="form-check-input" type="checkbox" name="vaccinated" id="vaccinated" {% if not pet or pet.vaccinated %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="vaccinated">
+                Fully Vaccinated
+              </label>
+            </div>
+          </div>
+
+          <!-- Adoption Status -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Adoption Status</label>
+            <select name="status" class="form-select">
+              <option value="available" {% if not pet or pet.status == 'available' %}selected{% endif %}>Available</option>
+              <option value="pending" {% if pet and pet.status == 'pending' %}selected{% endif %}>Pending Application</option>
+              <option value="adopted" {% if pet and pet.status == 'adopted' %}selected{% endif %}>Adopted</option>
+            </select>
+          </div>
+
+          <!-- Pet Photo Upload -->
+          <div class="col-md-8">
+            <label class="form-label fw-semibold">Pet Photo (Upload File)</label>
+            <input type="file" name="image" class="form-control image-upload-input" data-preview-target="petPreview" accept="image/*">
+            <small class="text-muted">Accepted formats: JPG, PNG, WEBP. Max size: 16MB.</small>
+          </div>
+
+          <!-- Image Preview -->
+          <div class="col-12">
+            <label class="form-label small text-muted d-block">Photo Preview:</label>
+            <img id="petPreview" src="{{ pet.image_url if pet else '/static/images/default_pet.svg' }}" alt="Pet Preview" class="rounded-3 border shadow-sm" style="width: 140px; height: 140px; object-fit: cover;" onerror="this.src='/static/images/default_pet.svg'">
+          </div>
+
+          <!-- Description Story -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">Pet Bio & Story</label>
+            <textarea name="description" rows="4" class="form-control" placeholder="Describe temperament, history, interaction with children and other pets...">{{ pet.description if pet else '' }}</textarea>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="col-12 mt-4 pt-3 border-top d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4 py-2">
+              <i class="bi bi-save me-1"></i> {% if pet %}Update Pet Details{% else %}Save Pet Listing{% endif %}
+            </button>
+            <a href="{{ url_for('admin_pets') }}" class="btn btn-light border px-4 py-2">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

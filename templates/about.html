@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row align-items-center g-5 mb-5">
+    <div class="col-lg-6">
+      <span class="section-tag">About Our Mission</span>
+      <h1 class="display-5 fw-bold mb-3">Connecting Loving Homes with Rescue Animals</h1>
+      <p class="lead text-muted">
+        Adopt n Shop was created as a final-year BCA project to modernize shelter operations and pet retail into an integrated, transparent platform.
+      </p>
+      <p class="text-secondary">
+        Every year, millions of companion animals end up in shelters. Our goal is to streamline the adoption process with transparent applications, digital tracking, and integrated pet care e-commerce to ensure every newly adopted pet receives the nutrition and supplies they need right from day one.
+      </p>
+      <div class="row g-3 mt-2">
+        <div class="col-sm-6">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span class="fw-semibold">100% Non-Profit Adoption</span>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span class="fw-semibold">Verified Vet Checkups</span>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span class="fw-semibold">Ethical Sourcing</span>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span class="fw-semibold">Fast & Secure Delivery</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80" 
+           alt="Two happy dogs running" 
+           class="img-fluid rounded-4 shadow-lg border"
+           onerror="this.src='/static/images/default_pet.svg'">
+    </div>
+  </div>
+
+  <div class="bg-white p-5 rounded-4 border shadow-sm my-5 text-center">
+    <h2 class="fw-bold mb-3">Academic Project Details</h2>
+    <p class="text-muted mx-auto" style="max-width: 700px;">
+      This project demonstrates comprehensive full-stack software development:
+    </p>
+    <div class="row g-4 mt-3">
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded-3">
+          <i class="bi bi-code-slash text-teal fs-3" style="color: var(--primary);"></i>
+          <h6 class="fw-bold mt-2">Python Flask</h6>
+          <small class="text-muted">MVC architecture, Jinja2, Werkzeug security</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded-3">
+          <i class="bi bi-database text-teal fs-3" style="color: var(--primary);"></i>
+          <h6 class="fw-bold mt-2">SQLite & SQLAlchemy</h6>
+          <small class="text-muted">Relational schema, foreign keys, cascades</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded-3">
+          <i class="bi bi-bootstrap text-teal fs-3" style="color: var(--primary);"></i>
+          <h6 class="fw-bold mt-2">Bootstrap 5</h6>
+          <small class="text-muted">Responsive mobile-first grid, custom components</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded-3">
+          <i class="bi bi-pie-chart text-teal fs-3" style="color: var(--primary);"></i>
+          <h6 class="fw-bold mt-2">Chart.js Analytics</h6>
+          <small class="text-muted">Live dashboard statistics and data visualization</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

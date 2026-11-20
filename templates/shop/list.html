@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Pet Supplies & Accessories Store – Adopt n Shop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header Banner -->
+  <div class="p-4 p-md-5 rounded-4 mb-4 text-white position-relative overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);">
+    <div class="position-relative" style="z-index: 2; max-width: 600px;">
+      <span class="badge bg-white text-dark fw-bold mb-2 px-3 py-2 rounded-pill">
+        <i class="bi bi-tag-fill text-warning me-1"></i> Quality Guaranteed Supplies
+      </span>
+      <h1 class="display-6 fw-bold mb-2">Pet Shop & Essentials</h1>
+      <p class="lead mb-0" style="opacity: 0.95; font-size: 1.1rem;">
+        Everything your furry or feathered family member needs — veterinarian-recommended food, engaging toys, beds, and healthcare.
+      </p>
+    </div>
+  </div>
+
+  <!-- Search & Filter Form -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <form action="{{ url_for('shop_list') }}" method="GET" class="row g-2 align-items-center">
+      <div class="col-lg-5 col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search supplies, food, toys...">
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-3 col-6">
+        <select name="category" class="form-select">
+          <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-3 col-6">
+        <select name="sort" class="form-select">
+          <option value="featured" {% if selected_sort == 'featured' %}selected{% endif %}>Featured</option>
+          <option value="price_low" {% if selected_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_high" {% if selected_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+          <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Name: A to Z</option>
+        </select>
+      </div>
+      <div class="col-lg-2 col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-secondary-custom w-100">
+          <i class="bi bi-funnel"></i> Apply
+        </button>
+        <a href="{{ url_for('shop_list') }}" class="btn btn-light border text-muted" title="Clear Filters">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Category Quick Links Pills -->
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{{ url_for('shop_list') }}" class="btn btn-sm {% if selected_category == 'all' %}btn-primary{% else %}btn-white border bg-white{% endif %} rounded-pill px-3">
+      All Products
+    </a>
+    {% for cat in categories %}
+      <a href="{{ url_for('shop_list', category=cat) }}" class="btn btn-sm {% if selected_category == cat %}btn-primary{% else %}btn-white border bg-white{% endif %} rounded-pill px-3">
+        {{ cat }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Product Grid -->
+  {% if products %}
+    <div class="row g-4">
+      {% for product in products %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+          <div class="custom-card">
+            <div class="card-img-container">
+              <img src="{{ product.image_url }}" alt="{{ product.name }}" onerror="this.src='/static/images/default_product.svg'">
+              <span class="badge-overlay-top">
+                <span class="badge-category">{{ product.category }}</span>
+              </span>
+              {% if product.stock <= 0 %}
+                <span class="badge-overlay-right">
+                  <span class="badge bg-danger">Out of Stock</span>
+                </span>
+              {% elif product.stock < 5 %}
+                <span class="badge-overlay-right">
+                  <span class="badge bg-warning text-dark">Only {{ product.stock }} Left</span>
+                </span>
+              {% endif %}
+            </div>
+            <div class="p-3 d-flex flex-column flex-grow-1">
+              <h6 class="fw-bold mb-1 text-truncate" title="{{ product.name }}">{{ product.name }}</h6>
+              <div class="d-flex justify-content-between align-items-baseline mb-2">
+                <span class="fs-5 fw-bold text-dark">₹{{ "%.2f"|format(product.price) }}</span>
+                {% if product.stock > 0 %}
+                  <span class="badge bg-success-subtle text-success small">In Stock</span>
+                {% else %}
+                  <span class="badge bg-danger-subtle text-danger small">Sold Out</span>
+                {% endif %}
+              </div>
+
+              <p class="small text-secondary mb-3 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ product.description }}
+              </p>
+
+              <div class="mt-auto d-flex gap-2">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-primary w-50">
+                  Details
+                </a>
+                {% if product.stock > 0 %}
+                  {% if current_user.is_authenticated and not current_user.is_admin %}
+                    <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" class="w-50">
+                      <input type="hidden" name="quantity" value="1">
+                      <input type="hidden" name="next" value="{{ request.url }}">
+                      <button type="submit" class="btn btn-secondary-custom w-100">
+                        <i class="bi bi-cart-plus"></i> Add
+                      </button>
+                    </form>
+                  {% else %}
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary-custom w-50">
+                      <i class="bi bi-cart-plus"></i> Add
+                    </a>
+                  {% endif %}
+                {% else %}
+                  <button class="btn btn-light border text-muted w-50" disabled>
+                    Sold Out
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+      <div class="d-inline-flex p-3 rounded-circle bg-light text-muted mb-3">
+        <i class="bi bi-box-seam fs-1"></i>
+      </div>
+      <h4 class="fw-bold">No supplies matched your search</h4>
+      <p class="text-muted">Try using different search terms or resetting the category filter.</p>
+      <a href="{{ url_for('shop_list') }}" class="btn btn-secondary-custom mt-2">
+        View All Supplies
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
