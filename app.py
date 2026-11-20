@@ -25,6 +25,11 @@ app.config.from_object(Config)
 db.init_app(app)
 with app.app_context():
     db.create_all()
+    try:
+        from seed_data import safe_seed
+        safe_seed()
+    except Exception as e:
+        app.logger.warning(f"Database bootstrap initialization check: {e}")
 
 login_manager = LoginManager()
 login_manager.init_app(app)

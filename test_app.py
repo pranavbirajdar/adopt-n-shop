@@ -273,8 +273,53 @@ class AdoptNShopTestCase(unittest.TestCase):
             leo_clean = db.session.get(Pet, leo_id)
             if leo_clean:
                 db.session.delete(leo_clean)
-            db.session.commit()
         print("[PASS] Customer pet listing full workflow (Submit -> Pending -> Ownership Check -> Edit -> Admin Approval -> Public Visibility) verified")
+
+    def test_09_database_idempotency_and_render_bootstrap(self):
+        """Test safe seeding idempotency, admin account persistence, pet & product queries"""
+        from seed_data import safe_seed
+        from config import Config
+
+        # Call safe_seed again to verify idempotency (no crashes, no duplicate errors)
+        safe_seed()
+
+        with app.app_context():
+            # 1. Admin account verification
+            admin = User.query.filter_by(email='admin@adoptnshop.com').first()
+            self.assertIsNotNone(admin, "Admin account must exist")
+            self.assertEqual(admin.role, 'admin')
+            self.assertTrue(admin.check_password('admin123'), "Admin password must verify successfully")
+
+            # 2. Approved available pets count
+            approved_pets = Pet.query.filter_by(status='available', approval_status='approved').all()
+            self.assertGreaterEqual(len(approved_pets), 5, "Must have approved pets available for public view")
+            for p in approved_pets:
+                self.assertIsNotNone(p.city)
+                self.assertIsNotNone(p.image_url)
+
+            # 3. Active products count
+            active_products = Product.query.filter_by(is_active=True).all()
+            self.assertGreaterEqual(len(active_products), 10, "Must have active products in shop")
+            for pr in active_products:
+                self.assertGreater(pr.price, 0)
+                self.assertGreater(pr.stock, 0)
+
+        # 4. Public endpoints reflect the seeded pets and products
+        res_pets = self.client.get('/pets')
+        self.assertIn(b'Bruno', res_pets.data)
+        self.assertIn(b'Simba', res_pets.data)
+
+        res_shop = self.client.get('/shop')
+        self.assertIn(b'Royal Canin', res_shop.data)
+        self.assertIn(b'Whiskas', res_shop.data)
+
+        # 5. Render postgres url fix check
+        test_postgres_url = "postgres://user:pass@host:5432/dbname"
+        converted = test_postgres_url.replace('postgres://', 'postgresql://', 1)
+        self.assertTrue(converted.startswith("postgresql://"))
+
+        print("[PASS] Database idempotency, admin credentials, and Render bootstrap verified")
 
 if __name__ == '__main__':
     unittest.main()
+

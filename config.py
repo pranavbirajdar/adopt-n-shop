@@ -7,8 +7,15 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'adopt-n-shop-dev-secret-key-change-in-production')
     
     # Database Configuration: SQLite by default, override via DATABASE_URL
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(BASE_DIR, 'adoptnshop.db'))
+    _database_url = os.environ.get('DATABASE_URL')
+    if _database_url and _database_url.startswith('postgres://'):
+        _database_url = _database_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _database_url or ('sqlite:///' + os.path.join(BASE_DIR, 'adoptnshop.db'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Administrator Configuration
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@adoptnshop.com').strip().lower()
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
     
     # File Upload Configuration
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
